@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 10 10 10;
+  --foreground: 250 250 250;
+  --card: 15 15 15;
+  --primary: 139 92 246;
+  --secondary: 236 72 153;
+  --accent: 59 130 246;
+  --muted: 30 30 35;
+  --border: 39 39 42;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: rgb(var(--background));
+  color: rgb(var(--foreground));
+}
+
+/* Glass effect */
+.glass {
+  background: rgba(var(--card), 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(var(--border), 0.5);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, rgb(var(--primary)) 0%, rgb(var(--secondary)) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow effect */
+.glow {
+  box-shadow: 0 0 30px rgba(var(--primary), 0.3);
+}
+
+.glow-sm {
+  box-shadow: 0 0 15px rgba(var(--primary), 0.2);
+}
+
+/* Button gradient */
+.btn-gradient {
+  background: linear-gradient(135deg, rgb(var(--primary)) 0%, rgb(var(--secondary)) 100%);
+}
+
+.btn-gradient:hover {
+  background: linear-gradient(135deg, rgb(var(--primary)) 20%, rgb(var(--secondary)) 100%);
+  box-shadow: 0 0 25px rgba(var(--primary), 0.4);
+}
+
+/* Subtle animations */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Scrollbar hide */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
