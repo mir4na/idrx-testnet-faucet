@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useFaucetData, useUserBalance, useClaimTokens } from './hooks/useFaucet'
 import { formatIDRX, formatTime, shortenAddress } from './config/constants'
 import { CONTRACTS } from './config/wagmi'
+import { SignInWithBaseButton } from "@base-org/account-ui/react"
 
 export default function App() {
   const { address, isConnected } = useAccount()
@@ -19,7 +20,7 @@ export default function App() {
   const isFaucetConfigured = CONTRACTS.IDRX_FAUCET !== '0x0000000000000000000000000000000000000000'
 
   // Find connectors
-  const coinbaseConnector = connectors.find(c => c.id === 'coinbaseWalletSDK')
+  const baseAccountConnector = connectors.find(c => c.id === 'baseAccount')
   const metaMaskConnector = connectors.find(c => c.id === 'metaMaskSDK' || c.id === 'metaMask')
   const injectedConnector = connectors.find(c => c.id === 'injected')
 
@@ -96,12 +97,20 @@ export default function App() {
             </button>
           </div>
         ) : (
-          <button
-            onClick={() => setShowWalletModal(true)}
-            className="btn-gradient px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-all glow-sm"
-          >
-            Connect Wallet
-          </button>
+          <div className="flex items-center">
+            {baseAccountConnector ? (
+              <SignInWithBaseButton
+                onClick={() => handleConnect(baseAccountConnector)}
+              />
+            ) : (
+              <button
+                onClick={() => setShowWalletModal(true)}
+                className="btn-gradient px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-all glow-sm"
+              >
+                Connect Wallet
+              </button>
+            )}
+          </div>
         )}
       </header>
 
@@ -119,7 +128,7 @@ export default function App() {
                 Get Free <span className="gradient-text">IDRX</span>
               </h2>
               <p className="text-sm text-gray-400">
-                {formatIDRX(dripAmount)} IDRX every 24 hours
+                {formatIDRX(dripAmount)} IDRX every 30 minutes
               </p>
             </div>
 
@@ -143,12 +152,21 @@ export default function App() {
                 <p className="text-gray-500 text-xs mt-1">Set VITE_FAUCET_ADDRESS</p>
               </div>
             ) : !isConnected ? (
-              <button
-                onClick={() => setShowWalletModal(true)}
-                className="w-full py-3 rounded-xl btn-gradient text-white font-medium hover:opacity-90 transition-all glow-sm"
-              >
-                Connect Wallet to Claim
-              </button>
+              <div className="w-full flex justify-center">
+                {baseAccountConnector ? (
+                  <SignInWithBaseButton
+                    className="w-full"
+                    onClick={() => handleConnect(baseAccountConnector)}
+                  />
+                ) : (
+                  <button
+                    onClick={() => setShowWalletModal(true)}
+                    className="w-full py-3 rounded-xl btn-gradient text-white font-medium hover:opacity-90 transition-all glow-sm"
+                  >
+                    Connect Wallet to Claim
+                  </button>
+                )}
+              </div>
             ) : countdown > 0 ? (
               <div className="text-center">
                 <div className="bg-muted/50 rounded-xl p-4 mb-3">
@@ -163,11 +181,10 @@ export default function App() {
               <button
                 onClick={handleClaim}
                 disabled={!canClaim || isLoading}
-                className={`w-full py-3 rounded-xl font-medium transition-all ${
-                  isLoading
+                className={`w-full py-3 rounded-xl font-medium transition-all ${isLoading
                     ? 'bg-primary/50 text-white/70 cursor-wait'
                     : 'btn-gradient text-white hover:opacity-90 glow-sm'
-                }`}
+                  }`}
               >
                 {isPending ? (
                   <span className="flex items-center justify-center gap-2">
@@ -204,8 +221,8 @@ export default function App() {
                   {error.message?.includes('CooldownNotExpired')
                     ? 'Cooldown not expired yet'
                     : error.message?.includes('InsufficientFaucetBalance')
-                    ? 'Faucet is empty'
-                    : 'Transaction failed'}
+                      ? 'Faucet is empty'
+                      : 'Transaction failed'}
                 </p>
               </div>
             )}
@@ -243,7 +260,7 @@ export default function App() {
                       },
                     },
                   })
-                } catch (e) {}
+                } catch (e) { }
               }}
               className="text-gray-500 hover:text-primary transition-colors"
             >
@@ -277,25 +294,14 @@ export default function App() {
             </div>
 
             <div className="space-y-3">
-              {/* Coinbase / Base Wallet */}
-              {coinbaseConnector && (
-                <button
-                  onClick={() => handleConnect(coinbaseConnector)}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl bg-[#0052FF]/10 border border-[#0052FF]/30 hover:bg-[#0052FF]/20 transition-all group"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-[#0052FF] flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" viewBox="0 0 32 32" fill="currentColor">
-                      <path d="M16 0C7.163 0 0 7.163 0 16s7.163 16 16 16 16-7.163 16-16S24.837 0 16 0zm-4.5 20.5h9c.276 0 .5-.224.5-.5v-8c0-.276-.224-.5-.5-.5h-9c-.276 0-.5.224-.5.5v8c0 .276.224.5.5.5z"/>
-                    </svg>
-                  </div>
-                  <div className="text-left flex-1">
-                    <p className="text-white font-medium">Coinbase Wallet</p>
-                    <p className="text-xs text-gray-400">Sign in with Base</p>
-                  </div>
-                  <svg className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+              {/* Base Account / Sign in with Base */}
+              {baseAccountConnector && (
+                <div className="w-full">
+                  <SignInWithBaseButton
+                    className="w-full"
+                    onClick={() => handleConnect(baseAccountConnector)}
+                  />
+                </div>
               )}
 
               {/* MetaMask */}
@@ -306,18 +312,18 @@ export default function App() {
                 >
                   <div className="w-10 h-10 rounded-xl bg-[#F6851B] flex items-center justify-center">
                     <svg className="w-6 h-6" viewBox="0 0 35 33" fill="none">
-                      <path d="M32.958 1L19.514 11.218l2.492-5.876L32.958 1z" fill="#E2761B" stroke="#E2761B" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M2.034 1l13.314 10.313-2.362-5.97L2.034 1zM28.11 23.89l-3.576 5.476 7.656 2.105 2.2-7.458-6.28-.123zM.994 24.013l2.185 7.458 7.656-2.105-3.576-5.476-6.265.123z" fill="#E4761B" stroke="#E4761B" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M10.472 14.51l-2.133 3.227 7.593.337-.263-8.167-5.197 4.603zM24.52 14.51l-5.263-4.697-.175 8.26 7.578-.337-2.14-3.226zM10.835 29.366l4.572-2.233-3.948-3.083-.624 5.316zM19.585 27.133l4.587 2.233-.638-5.316-3.949 3.083z" fill="#E4761B" stroke="#E4761B" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M24.172 29.366l-4.587-2.233.367 2.997-.04 1.263 4.26-2.027zM10.835 29.366l4.26 2.027-.027-1.263.352-2.997-4.585 2.233z" fill="#D7C1B3" stroke="#D7C1B3" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M15.173 22.396l-3.81-1.12 2.69-1.235 1.12 2.355zM19.812 22.396l1.12-2.355 2.703 1.235-3.823 1.12z" fill="#233447" stroke="#233447" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M10.835 29.366l.649-5.476-4.225.123 3.576 5.353zM23.508 23.89l.664 5.476 3.576-5.353-4.24-.123zM26.66 17.737l-7.578.337.703 3.91 1.12-2.355 2.703 1.235 3.052-3.127zM11.363 20.864l2.69-1.235 1.12 2.355.716-3.91-7.593-.337 3.067 3.127z" fill="#CD6116" stroke="#CD6116" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M8.296 17.737l3.163 6.168-.106-3.041-3.057-3.127zM23.608 20.864l-.119 3.041 3.17-6.168-3.051 3.127zM15.89 18.074l-.717 3.91.9 4.634.201-6.107-.385-2.437zM19.082 18.074l-.372 2.424.188 6.12.9-4.634-.716-3.91z" fill="#E4751F" stroke="#E4751F" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M19.785 22.396l-.9 4.634.649.45 3.948-3.082.12-3.041-3.817 1.039zM11.363 21.357l.106 3.041 3.948 3.082.649-.45-.9-4.634-3.803-1.039z" fill="#F6851B" stroke="#F6851B" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M19.866 31.393l.04-1.263-.34-.296h-5.14l-.326.296.026 1.263-4.26-2.027 1.49 1.221 3.016 2.092h5.228l3.03-2.092 1.476-1.22-4.24 2.026z" fill="#C0AD9E" stroke="#C0AD9E" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M19.585 27.133l-.649-.45h-3.879l-.649.45-.352 2.997.326-.296h5.14l.34.296-.277-2.997z" fill="#161616" stroke="#161616" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M33.523 11.847l1.14-5.502L32.958 1l-13.373 9.914 5.144 4.348 7.27 2.118 1.607-1.872-.696-.503 1.11-1.013-.854-.66 1.11-.846-.729-.54zM.33 6.345l1.154 5.502-.74.54 1.11.846-.84.66 1.11 1.013-.71.503 1.607 1.872 7.27-2.118 5.144-4.348L2.034 1 .33 6.345z" fill="#763D16" stroke="#763D16" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M31.999 17.38l-7.27-2.118 2.2 3.227-3.17 6.168 4.175-.053h6.226l-2.16-7.224zM10.264 15.262l-7.27 2.118-2.146 7.224h6.212l4.161.053-3.163-6.168 2.206-3.227zM19.082 18.486l.464-8.032 2.106-5.699h-9.33l2.094 5.699.477 8.032.175 2.45.013 6.094h3.88l.026-6.093.095-2.451z" fill="#F6851B" stroke="#F6851B" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M32.958 1L19.514 11.218l2.492-5.876L32.958 1z" fill="#E2761B" stroke="#E2761B" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M2.034 1l13.314 10.313-2.362-5.97L2.034 1zM28.11 23.89l-3.576 5.476 7.656 2.105 2.2-7.458-6.28-.123zM.994 24.013l2.185 7.458 7.656-2.105-3.576-5.476-6.265.123z" fill="#E4761B" stroke="#E4761B" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M10.472 14.51l-2.133 3.227 7.593.337-.263-8.167-5.197 4.603zM24.52 14.51l-5.263-4.697-.175 8.26 7.578-.337-2.14-3.226zM10.835 29.366l4.572-2.233-3.948-3.083-.624 5.316zM19.585 27.133l4.587 2.233-.638-5.316-3.949 3.083z" fill="#E4761B" stroke="#E4761B" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M24.172 29.366l-4.587-2.233.367 2.997-.04 1.263 4.26-2.027zM10.835 29.366l4.26 2.027-.027-1.263.352-2.997-4.585 2.233z" fill="#D7C1B3" stroke="#D7C1B3" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M15.173 22.396l-3.81-1.12 2.69-1.235 1.12 2.355zM19.812 22.396l1.12-2.355 2.703 1.235-3.823 1.12z" fill="#233447" stroke="#233447" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M10.835 29.366l.649-5.476-4.225.123 3.576 5.353zM23.508 23.89l.664 5.476 3.576-5.353-4.24-.123zM26.66 17.737l-7.578.337.703 3.91 1.12-2.355 2.703 1.235 3.052-3.127zM11.363 20.864l2.69-1.235 1.12 2.355.716-3.91-7.593-.337 3.067 3.127z" fill="#CD6116" stroke="#CD6116" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M8.296 17.737l3.163 6.168-.106-3.041-3.057-3.127zM23.608 20.864l-.119 3.041 3.17-6.168-3.051 3.127zM15.89 18.074l-.717 3.91.9 4.634.201-6.107-.385-2.437zM19.082 18.074l-.372 2.424.188 6.12.9-4.634-.716-3.91z" fill="#E4751F" stroke="#E4751F" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M19.785 22.396l-.9 4.634.649.45 3.948-3.082.12-3.041-3.817 1.039zM11.363 21.357l.106 3.041 3.948 3.082.649-.45-.9-4.634-3.803-1.039z" fill="#F6851B" stroke="#F6851B" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M19.866 31.393l.04-1.263-.34-.296h-5.14l-.326.296.026 1.263-4.26-2.027 1.49 1.221 3.016 2.092h5.228l3.03-2.092 1.476-1.22-4.24 2.026z" fill="#C0AD9E" stroke="#C0AD9E" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M19.585 27.133l-.649-.45h-3.879l-.649.45-.352 2.997.326-.296h5.14l.34.296-.277-2.997z" fill="#161616" stroke="#161616" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M33.523 11.847l1.14-5.502L32.958 1l-13.373 9.914 5.144 4.348 7.27 2.118 1.607-1.872-.696-.503 1.11-1.013-.854-.66 1.11-.846-.729-.54zM.33 6.345l1.154 5.502-.74.54 1.11.846-.84.66 1.11 1.013-.71.503 1.607 1.872 7.27-2.118 5.144-4.348L2.034 1 .33 6.345z" fill="#763D16" stroke="#763D16" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M31.999 17.38l-7.27-2.118 2.2 3.227-3.17 6.168 4.175-.053h6.226l-2.16-7.224zM10.264 15.262l-7.27 2.118-2.146 7.224h6.212l4.161.053-3.163-6.168 2.206-3.227zM19.082 18.486l.464-8.032 2.106-5.699h-9.33l2.094 5.699.477 8.032.175 2.45.013 6.094h3.88l.026-6.093.095-2.451z" fill="#F6851B" stroke="#F6851B" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                   <div className="text-left flex-1">
