@@ -89,16 +89,32 @@ export function useUserBalance(address) {
 export function useClaimTokens() {
   const { writeContract, data: hash, isPending, error } = useWriteContract()
 
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+  if (error) {
+    console.error("useClaimTokens Write Contract Error:", error)
+  }
+
+  const { isLoading: isConfirming, isSuccess, error: receiptError } = useWaitForTransactionReceipt({
     hash,
   })
 
+  if (receiptError) {
+    console.error("useClaimTokens Receipt Error:", receiptError)
+  }
+
   const claim = () => {
-    writeContract({
-      address: CONTRACTS.IDRX_FAUCET,
-      abi: FAUCET_ABI,
-      functionName: 'claim',
-    })
+    console.log("useClaimTokens: claim() called using faucet address:", CONTRACTS.IDRX_FAUCET)
+    try {
+      writeContract({
+        address: CONTRACTS.IDRX_FAUCET,
+        abi: FAUCET_ABI,
+        functionName: 'claim',
+      }, {
+        onError: (err) => console.error("writeContract onError:", err),
+        onSuccess: (data) => console.log("writeContract onSuccess, hash:", data)
+      })
+    } catch (e) {
+      console.error("writeContract exception:", e)
+    }
   }
 
   return {
@@ -107,6 +123,6 @@ export function useClaimTokens() {
     isPending,
     isConfirming,
     isSuccess,
-    error,
+    error: error || receiptError,
   }
 }

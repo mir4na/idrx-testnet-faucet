@@ -36,8 +36,16 @@ export default function App() {
     return () => clearInterval(timer)
   }, [countdown, refetchCanClaim])
 
+
+  const handleConnect = (connector) => {
+    console.log("Connecting with connector:", connector.name)
+    connect({ connector })
+    setShowWalletModal(false)
+  }
+
   useEffect(() => {
     if (isSuccess) {
+      console.log("Transaction success!")
       setShowSuccess(true)
       refetchBalance()
       refetchCanClaim()
@@ -46,13 +54,13 @@ export default function App() {
   }, [isSuccess, refetchBalance, refetchCanClaim])
 
   const handleClaim = () => {
-    if (!canClaim || isPending || isConfirming) return
+    console.log("handleClaim called. State:", { canClaim, isPending, isConfirming })
+    if (!canClaim || isPending || isConfirming) {
+      console.warn("Claim aborted. Conditions not met.")
+      return
+    }
+    console.log("Initiating claim...")
     claim()
-  }
-
-  const handleConnect = (connector) => {
-    connect({ connector })
-    setShowWalletModal(false)
   }
 
   const isLoading = isPending || isConfirming
@@ -214,6 +222,7 @@ export default function App() {
             <span className="text-gray-700">•</span>
             <button
               onClick={async () => {
+                console.log("Add IDRX to Wallet clicked")
                 try {
                   await window.ethereum?.request({
                     method: 'wallet_watchAsset',
@@ -226,7 +235,10 @@ export default function App() {
                       },
                     },
                   })
-                } catch (e) { }
+                  console.log("Wallet watchAsset request sent")
+                } catch (e) {
+                  console.error("Error adding token:", e)
+                }
               }}
               className="text-gray-500 hover:text-primary transition-colors"
             >
