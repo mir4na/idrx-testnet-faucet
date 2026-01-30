@@ -1,39 +1,9 @@
 import { createConfig, http, custom } from 'wagmi'
 import { baseSepolia } from 'wagmi/chains'
 import { coinbaseWallet, injected, metaMask } from 'wagmi/connectors'
-import { baseAccountProvider } from './baseAccount'
-
 export const config = createConfig({
   chains: [baseSepolia],
   connectors: [
-    {
-      id: 'baseAccount',
-      name: 'Sign in with Base',
-      type: 'custom',
-      async getProvider() {
-        return baseAccountProvider
-      },
-      async connect() {
-        const accounts = await baseAccountProvider.request({
-          method: 'wallet_connect',
-          params: [
-            {
-              version: '1',
-              capabilities: {
-                signInWithEthereum: {
-                  nonce: window.crypto.randomUUID().replace(/-/g, ''),
-                  chainId: '0x14a34', // Base Sepolia - 84532
-                },
-              },
-            },
-          ],
-        })
-        return {
-          accounts: accounts.map(a => a.address),
-          chainId: 84532,
-        }
-      },
-    },
     coinbaseWallet({
       appName: 'IDRX Faucet',
       preference: 'all',
